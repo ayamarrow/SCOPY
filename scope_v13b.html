@@ -1550,7 +1550,7 @@ function searchHTML(){
  <div class="hint">Write the symptoms in Arabic or English. The answer comes only from Davidson 24th edition. (اكتبي الأعراض عربي او انكليزي. الجواب من ديفيدسون ٢٤ بس.)</div>
  <textarea id="sxq" class="sxq" rows="3" placeholder="Example: dysphagia to solids, weight loss, 60 years (مثال: صعوبة بلع للصلب، نزول وزن، ٦٠ سنة)">${sxEsc(SX.q)}</textarea>
  <button class="btn" ${SX.busy?'disabled':''} onclick="sxGo()">${SX.busy?'Searching… (عم دور)':'Find top 3 diseases (جيبي أقرب ٣ امراض)'}</button>
- <div class="sxn">Searches today (بحث اليوم): ${n} / 20</div>`;
+ <div class="sxn"><span dir="ltr">${n} / 20</span> Searches today (بحث اليوم)</div>`;
  if(SX.err)h+=`<div class="sxerr">${sxEsc(SX.err)}</div>`;
  if(SX.res){
   const r=SX.res;
@@ -1568,13 +1568,13 @@ async function sxGo(){
  SX.busy=true;SX.err='';SX.res=null;hubRender();
  try{
   const r=await fetch(SX_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:SX.q,dx:1})});
-  if(!r.ok)throw 0;const j=await r.json();sxBump();
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error('HTTP '+r.status+' '+(j.a||''));sxBump();
   let a=String(j.a||''),dx=[];
   const m=a.match(/DX:\s*(.+)\s*$/im);
   if(m){dx=m[1].split('|').map(x=>x.replace(/[\[\]*.]/g,'').trim()).filter(Boolean).slice(0,3);a=a.replace(m[0],'').trim()}
   if(/مش موجود بمصادري/.test(a)&&!dx.length)dx=[];
   SX.res={text:a,dx:dx,src:j.src||[]};
- }catch(e){SX.err='Connection problem, try again (مشكلة اتصال، جربي مرة تانية).'}
+ }catch(e){SX.err='Connection problem, try again (مشكلة اتصال، جربي مرة تانية). ['+(e&&e.message||'network')+']'}
  SX.busy=false;hubRender();
  if(SX.res)SX.res.dx.forEach((d,i)=>sxPhotos(d,i));
 }
